@@ -1,22 +1,18 @@
 import functions as f
 
 class Blockchain:
-    
-    def __init__(self, max_transactions_per_block): #, wallets = {}):
+    def __init__(self, max_transactions_per_block,pow_difficulty):
+        self.wallets = {"miner" : 0}
+        
         self.max_transactions_per_block = max_transactions_per_block
+        self.pow_difficulty = pow_difficulty
         
         #create genesis and first blocks
-        block_0 = {}
-        block_0["header"] = {}
-        block_0["header"]["timestamp"] =  f.current_milli_time()
-        block_0["header"]["block_number"] = 0
-
-        block_1 = f.init_block(block_0)
-
-        self.chain = (block_0,block_1)
-      
-#        self.wallets = wallets
-
+        block_0 = f.init_block(self, prev_block = None)
+        self.chain = (block_0,)
+        f.reward_miner(self)
+        self.mine_last_block()
+        
     def add_transaction(self,wallets,transaction):
         #, fee, timestamp_transaction)
         # check if transaction valid:the 2 wallets given exist and there is enough cash in the wallet of the payer.
@@ -47,11 +43,36 @@ class Blockchain:
         #tmb se puede poner el tpo anterior a que se consiga el nonce valido. 
         # si uso la hora como nonce?
 
+        self.chain[-1]["body"]["wallets_after_block_transactions"] = self.wallets.copy()
+        
         #PoW
-        _ , hash = f.mine_block(self.chain[-1],2)
+        f.mine_block(self.chain[-1],self.pow_difficulty)
 
         #create new_block
-        new_block = f.init_block(self.chain[-1])
-        
+        new_block = f.init_block(self, prev_block = self.chain[-1])
         #add it to the chain
         self.chain += (new_block,)
+        
+        # first transaction of the new block:
+        f.reward_miner(self)
+        
+    def add_account(self,name_account):
+        # add account with 0 cash.
+        assert type(name_account) is str
+        if name_account not in self.wallets.keys():
+            self.wallets[name_account] = 0
+        else:
+            raise ValueError("Account name already exists")
+    def wallets_taking_only_mined_blocks(self):
+        print(self.chain[-2]["body"]["wallets_after_block_transactions"])
+
+    def show(self):
+        for i,b in enumerate(self.chain):
+            print("\nblock ",i)
+            print("\nheader:")
+            for k, v in b["header"].items():
+                print(k," : ", v)
+            print("\nbody:")
+            for k, v in b["body"].items():
+                print(k," : ", v)
+            print("\n","-"*100)

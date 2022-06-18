@@ -29,7 +29,6 @@ def hashes_given_depth(nodes):
             hash = string_to_hash(f"{child_1.name}{child_2.name}")
             new_node = Node(hash, children = [child_1,child_2])
             shallower_nodes.append(new_node)
-
     else:
         #si len_transactions es impar, a la primer tx la hasheo sola:
         child_1 = nodes[0]
@@ -44,7 +43,7 @@ def hashes_given_depth(nodes):
             new_node = Node(hash, children = [child_1,child_2])
             shallower_nodes.append(new_node)
 
-    print("len(shallower_nodes)=",len(shallower_nodes))
+    #print("len(shallower_nodes)=",len(shallower_nodes))
     return shallower_nodes
 
 def merkle_tree_from_txs(transactions):
@@ -59,34 +58,41 @@ def merkle_tree_from_txs(transactions):
 
 def current_milli_time():
     return round(time.time() * 1000)
-  
+
 def mine_block(block,hash_zeros):
     while not string_to_hash(str(block["header"])).startswith("0"*hash_zeros):
         block["header"]["nonce"]+=1
     return block, string_to_hash(str(block["header"]))
 
-def init_block(prev_block):
+def init_block(bc,prev_block):
     new_block = {}
-    new_block["header"] = {}
-    new_block["header"]["prev_hash"] =  string_to_hash(str(prev_block["header"]))   
-    new_block["header"]["block_number"] = prev_block["header"]["block_number"] + 1
+    new_block["header"] = {}   
     new_block["header"]["nonce"] = 0
-    
+    if prev_block != None:
+        new_block["header"]["prev_hash"] =  string_to_hash(str(prev_block["header"]))
+        new_block["header"]["block_number"] = prev_block["header"]["block_number"] + 1
+    else:
+        new_block["header"]["block_number"] = 0
+        
     new_block["body"] = {}
     new_block["body"]["transactions"] = ()
     return new_block
-    
-def add_account(wallets,name_account,cash):
-    # add account with amount of cash (in a real case, initial cash must be 0)
-    assert type(name_account) is str
-    if name_account not in wallets.keys():
-        wallets[name_account] = cash
-    else:
-      raise ValueError("Account name already exists")
-    return wallets
-    
+
 def block_newer_than(block1,block2):
     return block1["header"]["timestamp"] > block2["header"]["timestamp"]
 
+def reward_miner(bc):
+# the reward decreases for blocks with bigger block_number
+# there is a moment when the reward is zero and remains in that way.
+    number_actual_transactions = len(bc.chain[-1]["body"]["transactions"])
+    if number_actual_transactions < bc.max_transactions_per_block:
+        reward = round(100/(bc.chain[-1]["header"]["block_number"]+1),3)
+        bc.wallets["miner"] += reward
+        transaction = ("miner",reward)
+        bc.chain[-1]["body"]["transactions"] += (transaction,)
+    elif number_actual_transactions == bc.max_transactions_per_block: 
+            raise ValueError("the block is full.\nmine it to add a transaction in a new block. ")
+    
+    
 
-
+        
