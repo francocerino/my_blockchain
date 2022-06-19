@@ -1,4 +1,5 @@
 import functions as f
+from anytree import RenderTree
 
 class Blockchain:
     def __init__(self, max_transactions_per_block,pow_difficulty):
@@ -75,6 +76,11 @@ class Blockchain:
     def wallets_taking_only_mined_blocks(self):
         print(self.chain[-2]["body"]["wallets_after_block_transactions"])
 
+    def visualize_merkle_tree(self,number_block):
+        merkle_tree = self.chain[number_block]["body"]["merkle_tree"]
+        for pre, _, node in RenderTree(merkle_tree):
+            print("%s%s" % (pre, node.name))
+            
     def show(self):
         for i,b in enumerate(self.chain):
             print("\nblock ",i)
