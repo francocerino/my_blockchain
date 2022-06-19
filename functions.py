@@ -91,8 +91,4 @@ def reward_miner(bc):
         transaction = ("miner",reward)
         bc.chain[-1]["body"]["transactions"] += (transaction,)
     elif number_actual_transactions == bc.max_transactions_per_block: 
-            raise ValueError("the block is full.\nmine it to add a transaction in a new block. ")
-    
-    
-
-        
+            raise ValueError("the block is full.\nmine it to add a transaction in a new block. ")        

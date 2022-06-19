@@ -14,16 +14,28 @@ class Blockchain:
         self.mine_last_block()
         
     def add_transaction(self,wallets,transaction):
-        #, fee, timestamp_transaction)
-        # check if transaction valid:the 2 wallets given exist and there is enough cash in the wallet of the payer.
-
+        # fee
+        # check if transaction valid: the 2 wallets given exist and there is enough cash in the wallet of the payer.
+        
+        payer = transaction[0]
+        payee = transaction[1]
+        amount = transaction[2]
+        fee = transaction[3]
+        
         number_actual_transactions = len(self.chain[-1]["body"]["transactions"])
-        if number_actual_transactions < self.max_transactions_per_block:
-            assert wallets[transaction[0]] - transaction[2] >= 0
-            wallets[transaction[0]] -= transaction[2]
-            wallets[transaction[1]] += transaction[2]
-            #add transaction to last block
-            self.chain[-1]["body"]["transactions"] += (transaction,)
+        if number_actual_transactions < self.max_transactions_per_block + 1:
+            assert wallets[payer] - amount - fee >= 0
+            # add transaction of cash to be sent to the payee
+            wallets[payer] -= amount
+            wallets[payee] += amount
+            self.chain[-1]["body"]["transactions"] += (transaction[:3],)
+            
+            # send fee to the miner of the block
+            wallets[payer] -= fee
+            wallets["miner"] += fee
+            fee_transaction = (payer,"miner",fee)
+            self.chain[-1]["body"]["transactions"] += (fee_transaction,)
+            
 
         elif number_actual_transactions == self.max_transactions_per_block: 
             raise ValueError("the block is full.\nmine it to add a transaction in a new block. ")
