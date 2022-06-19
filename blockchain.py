@@ -7,14 +7,13 @@ class Blockchain:
         self.max_transactions_per_block = max_transactions_per_block
         self.pow_difficulty = pow_difficulty
         
-        #create genesis and first blocks
+        #create genesis and second block
         block_0 = f.init_block(self, prev_block = None)
         self.chain = (block_0,)
         f.reward_miner(self)
         self.mine_last_block()
         
     def add_transaction(self,transaction):
-        # fee
         # check if transaction valid: the 2 wallets given exist and there is enough cash in the wallet of the payer.
         
         payer = transaction[0]
@@ -50,13 +49,11 @@ class Blockchain:
         self.chain[-1]["body"]["merkle_tree"] = merkle_tree
         self.chain[-1]["header"]["merkle_tree_root_hash"] = merkle_tree.root.name
 
-        #timestamp last block
-        self.chain[-1]["header"]["timestamp"] =  f.current_milli_time() # time when PoW initiated. its ok?
-        #tmb se puede poner el tpo anterior a que se consiga el nonce valido. 
-        # si uso la hora como nonce?
-
         self.chain[-1]["body"]["wallets_after_block_transactions"] = self.wallets.copy()
-        
+
+        #timestamp last block
+        self.chain[-1]["header"]["timestamp"] =  f.current_milli_time() # time when PoW initiated.
+                
         #PoW
         f.mine_block(self.chain[-1],self.pow_difficulty)
 
