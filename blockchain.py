@@ -23,7 +23,8 @@ class Blockchain:
         fee = transaction[3]
         
         number_actual_transactions = len(self.chain[-1]["body"]["transactions"])
-        if number_actual_transactions < self.max_transactions_per_block + 1:
+        
+        if number_actual_transactions + 2 <= self.max_transactions_per_block:
             assert self.wallets[payer] - amount - fee >= 0
             # add transaction of cash to be sent to the payee
             self.wallets[payer] -= amount
@@ -36,9 +37,10 @@ class Blockchain:
             fee_transaction = (payer,"miner",fee)
             self.chain[-1]["body"]["transactions"] += (fee_transaction,)
             
+            print("Current block transactions = ", number_actual_transactions + 2,". Max allowed = ", self.max_transactions_per_block)
 
-        elif number_actual_transactions == self.max_transactions_per_block: 
-            raise ValueError("the block is full.\nmine it to add a transaction in a new block. ")
+        else: 
+            raise ValueError("The block is full. Mine it to add a transaction in a new block. ")
 
     def mine_last_block(self):
         # last block is mined and a new block is created
